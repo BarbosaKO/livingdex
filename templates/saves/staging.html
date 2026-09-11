@@ -1,0 +1,306 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .staging-container {
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    
+    .file-info {
+        background: #e3f2fd;
+        border-left: 4px solid #2196f3;
+        padding: 15px;
+        border-radius: 4px;
+        margin-bottom: 30px;
+    }
+    
+    .file-info strong {
+        color: #1976d2;
+    }
+    
+    .pokemon-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .pokemon-card {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        border: 2px solid #e9ecef;
+        transition: all 0.2s;
+        position: relative;
+    }
+    
+    .pokemon-card:hover {
+        border-color: #007bff;
+        transform: translateY(-2px);
+    }
+    
+    .pokemon-card.duplicate {
+        background: #ffebee;
+        border-color: #ffcdd2;
+        opacity: 0.7;
+    }
+    
+    .pokemon-card.selected {
+        border-color: #28a745;
+        background: #e8f5e9;
+    }
+    
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    
+    .pokemon-checkbox {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+    }
+    
+    .pokemon-number {
+        font-size: 0.8rem;
+        color: #666;
+        font-weight: bold;
+    }
+    
+    .pokemon-name {
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 5px;
+    }
+    
+    .pokemon-details {
+        font-size: 0.9rem;
+        color: #666;
+    }
+    
+    .shiny-badge {
+        background: linear-gradient(135deg, #ffd700, #ffed4e);
+        color: #333;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        font-weight: bold;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+    
+    .status-new {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .status-duplicate {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+    
+    .select-controls {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+    
+    .game-select {
+        padding: 10px;
+        border-radius: 6px;
+        border: 1px solid #ddd;
+        font-size: 1rem;
+    }
+    
+    .import-btn {
+        padding: 12px 24px;
+        background: linear-gradient(135deg, #28a745, #218838);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+    
+    .import-btn:hover {
+        transform: translateY(-2px);
+    }
+    
+    .import-btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .summary {
+        text-align: center;
+        margin-bottom: 20px;
+        color: #666;
+    }
+</style>
+
+<div class="staging-container">
+    <h2>🎮 Confirmar Importação de Save</h2>
+    
+    <div class="file-info">
+        <strong>Arquivo:</strong> {{ filename }} <br>
+        <strong>Hash SHA-256:</strong> <code>{{ file_hash[:16] }}...</code> <br>
+        <small>Este hash garante a integridade do arquivo processado.</small>
+    </div>
+
+    <div class="summary">
+        <strong>{{ pokemon_list | length }}</strong> Pokémon encontrados no save
+        (<span id="new-count">{{ pokemon_list | length - (pokemon_list | selectattr('pid', 'in', existing_pids) | list | length) }}</span> novos,
+        <span id="duplicate-count">{{ pokemon_list | selectattr('pid', 'in', existing_pids) | list | length }}</span> duplicados)
+    </div>
+
+    <div class="pokemon-grid">
+        {% for pkm in pokemon_list %}
+            {% set is_duplicate = pkm.pid in existing_pids %}
+            <div class="pokemon-card {% if is_duplicate %}duplicate{% endif %}" 
+                 data-pid="{{ pkm.pid }}" 
+                 data-pkm='{{ pkm | tojson }}'>
+                
+                <div class="card-header">
+                    <input type="checkbox" 
+                           class="pokemon-checkbox" 
+                           data-pkm='{{ pkm | tojson }}'
+                           {% if is_duplicate %} disabled title="Este Pokémon já está na sua coleção"{% endif %}>
+                    <span class="pokemon-number">#{{ "%04d" | format(pkm.species_id) }}</span>
+                </div>
+                
+                <div class="pokemon-name">{{ pkm.nickname or 'Unknown' }}</div>
+                
+                <div class="pokemon-details">
+                    <div>Espécie: #{{ pkm.species_id }}</div>
+                    <div>Level: {{ pkm.level }}</div>
+                    <div>OT: {{ pkm.ot_name }}</div>
+                    {% if pkm.is_shiny %}
+                        <div class="shiny-badge">✨ Shiny</div>
+                    {% endif %}
+                </div>
+                
+                <div style="margin-top: 10px;">
+                    {% if is_duplicate %}
+                        <span class="status-badge status-duplicate">Já existe</span>
+                    {% else %}
+                        <span class="status-badge status-new">Novo</span>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="controls">
+        <div class="select-controls">
+            <label>
+                <input type="checkbox" id="select-all"> Selecionar todos
+            </label>
+        </div>
+        
+        <div>
+            <label for="origin_game_id" style="margin-right: 10px;">Jogo de origem:</label>
+            <select id="origin_game_id" class="game-select">
+                <option value="1">Ruby (Gen 3)</option>
+                <option value="2">Sapphire (Gen 3)</option>
+                <option value="3">Emerald (Gen 3)</option>
+                <option value="4">FireRed (Gen 3)</option>
+                <option value="5">LeafGreen (Gen 3)</option>
+                <option value="6">Diamond (Gen 4)</option>
+                <option value="7">Pearl (Gen 4)</option>
+            </select>
+        </div>
+        
+        <button id="btn-commit" class="import-btn" disabled>
+            🚀 Importar Selecionados (0)
+        </button>
+    </div>
+</div>
+
+<script>
+    document.getElementById('select-all').addEventListener('change', function(e) {
+        const checkboxes = document.querySelectorAll('.pokemon-checkbox:not(:disabled)');
+        checkboxes.forEach(cb => cb.checked = e.target.checked);
+        updateImportButton();
+    });
+
+    document.querySelectorAll('.pokemon-checkbox').forEach(cb => {
+        cb.addEventListener('change', function() {
+            const card = this.closest('.pokemon-card');
+            if (this.checked) {
+                card.classList.add('selected');
+            } else {
+                card.classList.remove('selected');
+            }
+            updateImportButton();
+        });
+    });
+
+    function updateImportButton() {
+        const checkedCount = document.querySelectorAll('.pokemon-checkbox:checked').length;
+        const btn = document.getElementById('btn-commit');
+        btn.textContent = `🚀 Importar Selecionados (${checkedCount})`;
+        btn.disabled = checkedCount === 0;
+    }
+
+    document.getElementById('btn-commit').addEventListener('click', function() {
+        const checkboxes = document.querySelectorAll('.pokemon-checkbox:checked');
+        const originGameId = document.getElementById('origin_game_id').value;
+        
+        if (checkboxes.length === 0) {
+            alert('Selecione pelo menos um Pokémon para importar.');
+            return;
+        }
+
+        const selectedPokemon = Array.from(checkboxes).map(cb => JSON.parse(cb.getAttribute('data-pkm')));
+
+        fetch('/saves/commit', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                filename: "{{ filename }}",
+                origin_game_id: parseInt(originGameId),
+                selected_pokemon: selectedPokemon
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.status === 'success') {
+                alert(data.message);
+                window.location.href = '/pokemon';
+            } else {
+                alert('Erro: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Erro de rede:', error);
+            alert('Erro de comunicação com o servidor.');
+        });
+    });
+</script>
+{% endblock %}

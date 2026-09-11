@@ -1,0 +1,225 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .upload-container {
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        max-width: 700px;
+        margin: 0 auto;
+    }
+    
+    .upload-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .upload-header h2 {
+        margin: 0 0 10px 0;
+        color: #333;
+    }
+    
+    .upload-header p {
+        color: #666;
+        margin: 0;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .form-group input,
+    .form-group select {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.2s;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus {
+        outline: none;
+        border-color: #007bff;
+    }
+    
+    .file-input-wrapper {
+        position: relative;
+        border: 2px dashed #007bff;
+        border-radius: 8px;
+        padding: 30px;
+        text-align: center;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    
+    .file-input-wrapper:hover {
+        background: #f8f9fa;
+    }
+    
+    .file-input-wrapper input[type="file"] {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+    }
+    
+    .file-input-text {
+        color: #666;
+        font-size: 1rem;
+    }
+    
+    .upload-btn {
+        width: 100%;
+        padding: 15px;
+        background: linear-gradient(135deg, #28a745, #218838);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .upload-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+    }
+    
+    .files-section {
+        margin-top: 40px;
+    }
+    
+    .files-section h3 {
+        color: #333;
+        margin-bottom: 20px;
+    }
+    
+    .files-list {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .file-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 12px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .file-item:last-child {
+        border-bottom: none;
+    }
+    
+    .file-icon {
+        font-size: 1.5rem;
+    }
+    
+    .file-name {
+        flex: 1;
+        font-family: 'Courier New', monospace;
+        color: #333;
+    }
+    
+    .info-box {
+        background: #e3f2fd;
+        border-left: 4px solid #2196f3;
+        padding: 15px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+    }
+    
+    .info-box h4 {
+        margin: 0 0 10px 0;
+        color: #1976d2;
+    }
+    
+    .info-box ul {
+        margin: 0;
+        padding-left: 20px;
+        color: #555;
+    }
+    
+    .info-box li {
+        margin-bottom: 5px;
+    }
+</style>
+
+<div class="upload-container">
+    <div class="upload-header">
+        <h2>📁 Importar Save de Pokémon</h2>
+        <pExtraia seus Pokémon de arquivos .sav reais</p>
+    </div>
+
+    <div class="info-box">
+        <h4>🎮 Gerações Suportadas</h4>
+        <ul>
+            <li><strong>Gen 3:</strong> Ruby, Sapphire, Emerald, FireRed, LeafGreen (GBA)</li>
+            <li><strong>Gen 4:</strong> Diamond, Pearl, Platinum, HeartGold, SoulSilver (NDS)</li>
+        </ul>
+    </div>
+
+    <form action="{{ url_for('saves.upload_save') }}" method="POST" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="generation">Geração do Jogo:</label>
+            <select name="generation" id="generation" required>
+                <option value="">Selecione a geração...</option>
+                <option value="3">Geração 3 (GBA - Ruby/Sapphire/Emerald/FR/LG)</option>
+                <option value="4">Geração 4 (NDS - Diamond/Pearl/Platinum/HG/SS)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Arquivo .sav:</label>
+            <div class="file-input-wrapper">
+                <input type="file" name="save_file" id="save_file" accept=".sav" required>
+                <div class="file-input-text">
+                    <span id="file-label">Clique ou arraste o arquivo .sav aqui</span>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="upload-btn">
+            🚀 Enviar e Analisar Save
+        </button>
+    </form>
+</div>
+
+{% if files %}
+<div class="upload-container files-section">
+    <h3>📂 Arquivos Enviados Anteriormente</h3>
+    <div class="files-list">
+        {% for f in files %}
+        <div class="file-item">
+            <span class="file-icon">📄</span>
+            <span class="file-name">{{ f }}</span>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<script>
+document.getElementById('save_file').addEventListener('change', function(e) {
+    const fileName = e.target.files[0]?.name || 'Clique ou arraste o arquivo .sav aqui';
+    document.getElementById('file-label').textContent = fileName;
+});
+</script>
+{% endblock %}

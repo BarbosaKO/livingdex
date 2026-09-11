@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .track-card {
+        background: #fff;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .track-title {
+        font-size: 1.2rem;
+        font-weight: bold;
+        margin-bottom: 10px;
+        color: #333;
+    }
+    .progress-bar-bg {
+        background-color: #e0e0e0;
+        border-radius: 10px;
+        width: 100%;
+        height: 20px;
+        overflow: hidden;
+    }
+    .progress-bar-fill {
+        background-color: #4caf50;
+        height: 100%;
+        transition: width 0.5s ease;
+    }
+    .stats-text {
+        font-size: 0.9rem;
+        color: #666;
+        margin-top: 5px;
+        text-align: right;
+    }
+</style>
+
+<h2>Status da Coleção - Living Dex</h2>
+<p>Acompanhe o preenchimento das suas variantes e metas.</p>
+
+<div class="dex-dashboard">
+    {% if progress_stats %}
+        {% for stat in progress_stats %}
+        <div class="track-card">
+            <div class="track-title">{{ stat.track | replace('_', ' ') }} Dex</div>
+            
+            <div class="progress-bar-bg">
+                <!-- A largura da barra de preenchimento é definida inline via Jinja2 -->
+                <div class="progress-bar-fill" style="width: {{ stat.percentage }}%;"></div>
+            </div>
+            
+            <div class="stats-text">
+                <strong>{{ stat.completed }} / {{ stat.total }}</strong> capturados ({{ stat.percentage }}%)
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="track-card">
+            <p>Nenhuma meta de Living Dex configurada ainda. Adicione metas no banco de dados (tabela `living_dex_targets`).</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,297 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .collection-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+    
+    .add-btn {
+        padding: 12px 24px;
+        background: #28a745;
+        color: white;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: bold;
+        transition: background 0.2s;
+    }
+    
+    .add-btn:hover {
+        background: #218838;
+    }
+    
+    .collection-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 20px;
+    }
+    
+    .pokemon-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+        text-decoration: none;
+        color: inherit;
+        position: relative;
+    }
+    
+    .pokemon-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .delete-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        cursor: pointer;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.2s, background 0.2s;
+        z-index: 10;
+    }
+    
+    .pokemon-card:hover .delete-btn {
+        opacity: 1;
+    }
+    
+    .delete-btn:hover {
+        background: #c82333;
+    }
+    
+    .pokemon-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    
+    .pokemon-number {
+        font-size: 0.9rem;
+        color: #666;
+        font-weight: bold;
+    }
+    
+    .shiny-badge {
+        background: linear-gradient(135deg, #ffd700, #ffed4e);
+        color: #333;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        font-weight: bold;
+    }
+    
+    .pokemon-sprite {
+        width: 100px;
+        height: 100px;
+        object-fit: contain;
+        margin: 0 auto 15px;
+        display: block;
+    }
+    
+    .pokemon-name {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #333;
+        margin: 0 0 5px 0;
+        text-transform: capitalize;
+        text-align: center;
+    }
+    
+    .pokemon-form {
+        font-size: 0.8rem;
+        color: #666;
+        text-align: center;
+        margin-bottom: 10px;
+    }
+    
+    .pokemon-details {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #f8f9fa;
+        padding: 10px;
+        border-radius: 8px;
+    }
+    
+    .detail-item {
+        text-align: center;
+    }
+    
+    .detail-label {
+        font-size: 0.7rem;
+        color: #666;
+        margin-bottom: 2px;
+    }
+    
+    .detail-value {
+        font-size: 0.9rem;
+        font-weight: bold;
+        color: #333;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .empty-icon {
+        font-size: 4rem;
+        margin-bottom: 20px;
+    }
+    
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 30px;
+    }
+    
+    .pagination a, .pagination span {
+        padding: 10px 16px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: bold;
+    }
+    
+    .pagination a {
+        background: #007bff;
+        color: white;
+        transition: background 0.2s;
+    }
+    
+    .pagination a:hover {
+        background: #0056b3;
+    }
+    
+    .pagination span.current {
+        background: #007bff;
+        color: white;
+    }
+    
+    .pagination span.ellipsis {
+        background: none;
+        color: #666;
+    }
+</style>
+
+<div class="collection-header">
+    <div>
+        <h2>Minha Coleção</h2>
+        <p style="color: #666; margin: 5px 0 0 0;">Total: {{ pagination.total }} Pokémon</p>
+    </div>
+    <a href="{{ url_for('pokemon.add_pokemon') }}" class="add-btn">+ Adicionar Pokémon</a>
+</div>
+
+{% if pagination.items %}
+<div class="collection-grid">
+    {% for instance in pagination.items %}
+    <div class="pokemon-card">
+        <button class="delete-btn" onclick="deletePokemon('{{ instance.id }}', '{{ instance.species.name }}')" title="Excluir Pokémon">×</button>
+        <a href="{{ url_for('pokemon.view_pokemon', instance_id=instance.id) }}" style="text-decoration: none; color: inherit; display: block;">
+            <div class="pokemon-header">
+                <span class="pokemon-number">#{{ "%04d" | format(instance.species_id) }}</span>
+                {% if instance.is_shiny %}
+                    <span class="shiny-badge">✨ Shiny</span>
+                {% endif %}
+            </div>
+            
+            {% if instance.form_variant.sprite_url %}
+                <img src="{{ instance.form_variant.sprite_url }}" alt="{{ instance.species.name }}" class="pokemon-sprite">
+            {% else %}
+                <div class="pokemon-sprite" style="display: flex; align-items: center; justify-content: center; background: #f0f0f0; border-radius: 8px;">
+                    <span style="color: #999;">No sprite</span>
+                </div>
+            {% endif %}
+            
+            <h3 class="pokemon-name">{{ instance.species.name }}</h3>
+            {% if instance.form_variant.form_identifier != 'normal' %}
+                <div class="pokemon-form">{{ instance.form_variant.display_name }}</div>
+            {% endif %}
+            
+            <div class="pokemon-details">
+                <div class="detail-item">
+                    <div class="detail-label">Level</div>
+                    <div class="detail-value">{{ instance.level }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">OT</div>
+                    <div class="detail-value">{{ instance.ot_name[:8] }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Gênero</div>
+                    <div class="detail-value">
+                        {% if instance.gender == 'M' %}♂
+                        {% elif instance.gender == 'F' %}♀
+                        {% else %}?
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="empty-icon">📦</div>
+    <h3>Sua coleção está vazia</h3>
+    <p style="color: #666; margin-bottom: 20px;">Adicione manualmente ou importe um arquivo de save (.sav).</p>
+    <a href="{{ url_for('pokemon.add_pokemon') }}" class="add-btn">+ Adicionar Primeiro Pokémon</a>
+</div>
+{% endif %}
+
+<!-- Paginação -->
+{% if pagination.pages > 1 %}
+<div class="pagination">
+    {% if pagination.has_prev %}
+        <a href="{{ url_for('pokemon.list_pokemon', page=pagination.prev_num) }}">« Anterior</a>
+    {% endif %}
+    
+    {% for page_num in pagination.iter_pages() %}
+        {% if page_num %}
+            {% if page_num != pagination.page %}
+                <a href="{{ url_for('pokemon.list_pokemon', page=page_num) }}">{{ page_num }}</a>
+            {% else %}
+                <span class="current">{{ page_num }}</span>
+            {% endif %}
+        {% else %}
+            <span class="ellipsis">…</span>
+        {% endif %}
+    {% endfor %}
+    
+    {% if pagination.has_next %}
+        <a href="{{ url_for('pokemon.list_pokemon', page=pagination.next_num) }}">Próximo »</a>
+    {% endif %}
+</div>
+{% endif %}
+
+<script>
+function deletePokemon(pokemonId, pokemonName) {
+    if (confirm(`Tem certeza que deseja excluir ${pokemonName} da sua coleção? Esta ação não pode ser desfeita.`)) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/pokemon/${pokemonId}/delete`;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>
+{% endblock %}

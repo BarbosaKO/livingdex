@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .pokemon-detail {
+        background: white;
+        border-radius: 8px;
+        padding: 30px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .pokemon-header {
+        display: flex;
+        align-items: center;
+        gap: 30px;
+        margin-bottom: 30px;
+    }
+    
+    .pokemon-thumbnail {
+        width: 200px;
+        height: 200px;
+        object-fit: contain;
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 20px;
+    }
+    
+    .pokemon-info {
+        flex: 1;
+    }
+    
+    .pokemon-number {
+        font-size: 1.5rem;
+        color: #666;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+    
+    .pokemon-name {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #333;
+        margin: 0 0 10px 0;
+        text-transform: capitalize;
+    }
+    
+    .pokemon-generation {
+        color: #666;
+        font-size: 1rem;
+    }
+    
+    .pokemon-description {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+        line-height: 1.6;
+        color: #333;
+    }
+    
+    .forms-section {
+        margin-top: 30px;
+    }
+    
+    .forms-section h3 {
+        color: #333;
+        border-bottom: 2px solid #007bff;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .forms-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 15px;
+    }
+    
+    .form-card {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        text-align: center;
+        border: 2px solid #e9ecef;
+    }
+    
+    .form-card:hover {
+        border-color: #007bff;
+    }
+    
+    .form-sprite {
+        width: 80px;
+        height: 80px;
+        object-fit: contain;
+        margin: 0 auto 10px;
+    }
+    
+    .form-name {
+        font-weight: bold;
+        color: #333;
+        text-transform: capitalize;
+    }
+    
+    .back-link {
+        display: inline-block;
+        margin-bottom: 20px;
+        color: #007bff;
+        text-decoration: none;
+        font-weight: bold;
+    }
+    
+    .back-link:hover {
+        text-decoration: underline;
+    }
+</style>
+
+<a href="{{ url_for('pokedex.pokedex_index') }}" class="back-link">← Voltar para Pokédex</a>
+
+<div class="pokemon-detail">
+    <div class="pokemon-header">
+        {% if species.forms and species.forms[0].thumbnail_url %}
+            <img src="{{ species.forms[0].thumbnail_url }}" alt="{{ species.name }}" class="pokemon-thumbnail">
+        {% elif species.forms and species.forms[0].sprite_url %}
+            <img src="{{ species.forms[0].sprite_url }}" alt="{{ species.name }}" class="pokemon-thumbnail">
+        {% else %}
+            <div class="pokemon-thumbnail" style="display: flex; align-items: center; justify-content: center;">
+                <span style="color: #999;">No sprite</span>
+            </div>
+        {% endif %}
+        
+        <div class="pokemon-info">
+            <div class="pokemon-number">#{{ "%04d" | format(species.id) }}</div>
+            <h1 class="pokemon-name">{{ species.name }}</h1>
+            <div class="pokemon-generation">Geração {{ species.generation_introduced }}</div>
+            {% if species.has_gender_differences %}
+                <div style="margin-top: 10px; color: #666;">Possui diferenças de gênero</div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="pokemon-description">
+        <h3 style="margin-top: 0; color: #333;">Descrição</h3>
+        <p>{{ species.description or 'Descrição não disponível.' }}</p>
+    </div>
+    
+    {% if species.forms %}
+    <div class="forms-section">
+        <h3>Formas Disponíveis</h3>
+        <div class="forms-grid">
+            {% for form in species.forms %}
+            <div class="form-card">
+                {% if form.sprite_url %}
+                    <img src="{{ form.sprite_url }}" alt="{{ form.display_name }}" class="form-sprite">
+                {% else %}
+                    <div class="form-sprite" style="display: flex; align-items: center; justify-content: center; background: #e9ecef; border-radius: 4px;">
+                        <span style="color: #999; font-size: 0.8rem;">No sprite</span>
+                    </div>
+                {% endif %}
+                <div class="form-name">{{ form.display_name }}</div>
+                {% if form.is_battle_only %}
+                    <div style="font-size: 0.8rem; color: #666; margin-top: 5px;">Apenas batalha</div>
+                {% endif %}
+                {% if form.is_go_costume %}
+                    <div style="font-size: 0.8rem; color: #666; margin-top: 5px;">Traje GO</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .hero-section {
+        text-align: center;
+        margin-bottom: 50px;
+        padding: 40px 20px;
+        background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.85) 100%);
+        border-radius: 16px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    }
+    
+    .hero-title {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 15px;
+    }
+    
+    .hero-subtitle {
+        font-size: 1.2rem;
+        color: #666;
+        margin-bottom: 30px;
+    }
+    
+    .cards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 25px;
+        margin-bottom: 40px;
+    }
+    
+    .feature-card {
+        background: white;
+        padding: 30px;
+        border-radius: 16px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        text-align: center;
+        transition: transform 0.3s, box-shadow 0.3s;
+        text-decoration: none;
+        color: inherit;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    }
+    
+    .card-icon {
+        font-size: 3rem;
+        margin-bottom: 20px;
+    }
+    
+    .card-title {
+        font-size: 1.4rem;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 10px;
+    }
+    
+    .card-description {
+        color: #666;
+        font-size: 0.95rem;
+        margin-bottom: 20px;
+        line-height: 1.5;
+    }
+    
+    .card-button {
+        display: inline-block;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: bold;
+        text-decoration: none;
+        transition: transform 0.2s;
+    }
+    
+    .card-button:hover {
+        transform: scale(1.05);
+    }
+    
+    .pokedex-btn {
+        background: linear-gradient(135deg, #e3350d, #ff6b35);
+        color: white;
+    }
+    
+    .collection-btn {
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        color: white;
+    }
+    
+    .boxes-btn {
+        background: linear-gradient(135deg, #ffc107, #e0a800);
+        color: #333;
+    }
+    
+    .import-btn {
+        background: linear-gradient(135deg, #28a745, #218838);
+        color: white;
+    }
+    
+    .progress-btn {
+        background: linear-gradient(135deg, #6f42c1, #5a32a3);
+        color: white;
+    }
+    
+    .info-section {
+        background: white;
+        padding: 30px;
+        border-radius: 16px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .info-section h3 {
+        color: #333;
+        margin-bottom: 20px;
+        font-size: 1.3rem;
+    }
+    
+    .info-section ul {
+        color: #555;
+        line-height: 1.8;
+        padding-left: 20px;
+    }
+    
+    .info-section li {
+        margin-bottom: 10px;
+    }
+    
+    .info-section code {
+        background: #f8f9fa;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-family: 'Courier New', monospace;
+        color: #e3350d;
+    }
+</style>
+
+<div class="hero-section">
+    <h1 class="hero-title">🎮 Living Dex Tracker</h1>
+    <p class="hero-subtitle">Gerencie suas coleções Pokémon, importe saves e organize suas boxes</p>
+</div>
+
+<div class="cards-grid">
+    <!-- Card: Pokédex -->
+    <a href="/pokedex" class="feature-card">
+        <div class="card-icon">📖</div>
+        <h3 class="card-title">Pokédex</h3>
+        <p class="card-description">Consulte todos os Pokémon com sprites, descrições detalhadas e informações completas.</p>
+        <span class="card-button pokedex-btn">Explorar Pokédex</span>
+    </a>
+
+    <!-- Card: Coleção -->
+    <a href="/pokemon" class="feature-card">
+        <div class="card-icon">📦</div>
+        <h3 class="card-title">Minha Coleção</h3>
+        <p class="card-description">Visualize e gerencie todos os Pokémon que você possui, com opções de edição e exclusão.</p>
+        <span class="card-button collection-btn">Ver Coleção</span>
+    </a>
+
+    <!-- Card: Boxes -->
+    <a href="/boxes" class="feature-card">
+        <div class="card-icon">🗃️</div>
+        <h3 class="card-title">PC Boxes</h3>
+        <p class="card-description">Organize seus Pokémon visualmente com sistema de arrastar e soltar entre boxes.</p>
+        <span class="card-button boxes-btn">Gerenciar Boxes</span>
+    </a>
+
+    <!-- Card: Progresso -->
+    <a href="/dex" class="feature-card">
+        <div class="card-icon">📊</div>
+        <h3 class="card-title">Progresso</h3>
+        <p class="card-description">Acompanhe o status das suas metas de Living Dex com barras de progresso detalhadas.</p>
+        <span class="card-button progress-btn">Ver Progresso</span>
+    </a>
+
+    <!-- Card: Importar -->
+    <a href="/saves" class="feature-card">
+        <div class="card-icon">📁</div>
+        <h3 class="card-title">Importar Saves</h3>
+        <p class="card-description">Extraia Pokémon diretamente de arquivos de save reais (Gen 3, Gen 4).</p>
+        <span class="card-button import-btn">Importar .SAV</span>
+    </a>
+</div>
+
+<div class="info-section">
+    <h3>🚀 Como começar</h3>
+    <ul>
+        <li><strong>Configurar:</strong> Execute <code>python seed.py</code> para carregar os metadados de espécies e jogos iniciais.</li>
+        <li><strong>Iniciar:</strong> Rode <code>python run.py</code> ou <code>flask run</code> para iniciar o servidor.</li>
+        <li><strong>Adicionar:</strong> Vá em "Coleção" e clique em "+ Adicionar Pokémon" para cadastrar manualmente.</li>
+        <li><strong>Organizar:</strong> Use o sistema de Boxes para organizar visualmente seus Pokémon.</li>
+        <li><strong>Importar:</strong> Faça upload de arquivos <code>.sav</code> na seção "Importar" para extrair Pokémon.</li>
+    </ul>
+</div>
+{% endblock %}

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Living Dex Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, #e3350d 0%, #ff6b35 100%);
+            padding: 1rem 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .navbar-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .navbar-brand {
+            color: white;
+            text-decoration: none;
+            font-size: 1.5rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .navbar-brand:hover {
+            text-decoration: none;
+        }
+        
+        .navbar-nav {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+        
+        .navbar-nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.2s;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+        }
+        
+        .navbar-nav a:hover {
+            background: rgba(255,255,255,0.2);
+            text-decoration: none;
+        }
+        
+        .navbar-nav a.active {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .container {
+            padding: 30px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        /* Alertas */
+        .alert {
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        /* Estilos do Sistema de Box */
+        .box-grid { 
+            display: grid; 
+            grid-template-columns: repeat(6, 1fr); 
+            gap: 10px; 
+            max-width: 600px; 
+            background: #ddd; 
+            padding: 15px; 
+            border-radius: 8px; 
+        }
+        
+        .box-slot { 
+            width: 80px; 
+            height: 80px; 
+            background: rgba(255,255,255,0.7); 
+            border: 2px dashed #bbb; 
+            border-radius: 5px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            cursor: grab; 
+            position: relative;
+        }
+        
+        .box-slot img { 
+            max-width: 100%; 
+            max-height: 100%; 
+            pointer-events: none; 
+        }
+        
+        .box-slot.drag-over { 
+            background-color: #cce5ff; 
+            border-color: #0056b3; 
+        }
+        
+        .slot-number { 
+            position: absolute; 
+            top: 2px; 
+            left: 4px; 
+            font-size: 10px; 
+            color: #888; 
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="/" class="navbar-brand">
+                🎮 Living Dex Tracker
+            </a>
+            <ul class="navbar-nav">
+                <li><a href="/">Início</a></li>
+                <li><a href="/pokedex">Pokédex</a></li>
+                <li><a href="/pokemon">Coleção</a></li>
+                <li><a href="/boxes">Boxes</a></li>
+                <li><a href="/dex">Progresso</a></li>
+                <li><a href="/saves">Importar</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Local onde as mensagens de erro/sucesso do Flask aparecerão -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Conteúdo específico de cada página é injetado aqui -->
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>

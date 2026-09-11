@@ -1,0 +1,248 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .box-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .box-grid {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 10px;
+        margin-bottom: 30px;
+    }
+    
+    .box-slot {
+        aspect-ratio: 1;
+        background: white;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        transition: all 0.2s;
+    }
+    
+    .box-slot:hover {
+        border-color: #007bff;
+        transform: scale(1.05);
+    }
+    
+    .box-slot.dragging {
+        opacity: 0.5;
+        border-color: #28a745;
+    }
+    
+    .box-slot.drag-over {
+        background: #e8f5e9;
+        border-color: #28a745;
+    }
+    
+    .slot-number {
+        position: absolute;
+        top: 2px;
+        left: 5px;
+        font-size: 0.7rem;
+        color: #999;
+        font-weight: bold;
+    }
+    
+    .pokemon-sprite {
+        width: 80%;
+        height: 80%;
+        object-fit: contain;
+    }
+    
+    .pokemon-info {
+        position: absolute;
+        bottom: 2px;
+        right: 5px;
+        font-size: 0.6rem;
+        color: #666;
+        background: rgba(255,255,255,0.8);
+        padding: 1px 3px;
+        border-radius: 3px;
+    }
+    
+    .move-btn {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        background: #ffc107;
+        border: none;
+        border-radius: 3px;
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+    
+    .box-slot:hover .move-btn {
+        opacity: 1;
+    }
+    
+    .move-btn:hover {
+        background: #e0a800;
+    }
+    
+    .box-navigation {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 20px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+    
+    .nav-btn {
+        padding: 8px 16px;
+        background: #007bff;
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+        font-weight: bold;
+    }
+    
+    .nav-btn:hover {
+        background: #0056b3;
+    }
+    
+    .nav-btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+    }
+</style>
+
+<div class="box-header">
+    <div>
+        <h2>{{ box.name }}</h2>
+        <p style="color: #666; margin: 5px 0;">Arraste e solte os Pokémon para organizar ou use o botão ⬆ para mover</p>
+    </div>
+    <a href="{{ url_for('boxes.index') }}" class="nav-btn">← Voltar para Boxes</a>
+</div>
+
+<div class="box-grid" id="current-box">
+    {% for slot_num in range(1, 31) %}
+        {% set slot = slots_dict.get(slot_num) %}
+        
+        <div class="box-slot" 
+             draggable="true" 
+             data-box-id="{{ box.id }}" 
+             data-slot-num="{{ slot_num }}" 
+             {% if slot and slot.pokemon %}data-pokemon-id="{{ slot.pokemon.id }}"{% endif %}>
+             
+            <span class="slot-number">{{ slot_num }}</span>
+            
+            {% if slot and slot.pokemon %}
+                <img src="{{ slot.pokemon.form_variant.sprite_url or '/static/sprites/' + '%03d.png' | format(slot.pokemon.species_id) }}" 
+                     alt="{{ slot.pokemon.nickname or slot.pokemon.species.name }}" 
+                     class="pokemon-sprite"
+                     title="{{ slot.pokemon.nickname or slot.pokemon.species.name }} (Lv. {{ slot.pokemon.level }})">
+                
+                <div class="pokemon-info">Lv.{{ slot.pokemon.level }}</div>
+                <button class="move-btn" onclick="showMoveModal('{{ slot.pokemon.id }}', '{{ slot.pokemon.nickname or slot.pokemon.species.name }}')" title="Mover para outra box">⬆</button>
+            {% endif %}
+        </div>
+    {% endfor %}
+</div>
+
+<div class="box-navigation">
+    {% if box.order_index > 1 %}
+        <a href="{{ url_for('boxes.view_box', box_id=box.order_index - 1) }}" class="nav-btn">← Box Anterior</a>
+    {% else %}
+        <span></span>
+    {% endif %}
+    
+    <span>Box {{ box.order_index }} de 10</span>
+    
+    {% if box.order_index < 10 %}
+        <a href="{{ url_for('boxes.view_box', box_id=box.order_index + 1) }}" class="nav-btn">Próxima Box →</a>
+    {% else %}
+        <span></span>
+    {% endif %}
+</div>
+
+<!-- Modal para mover Pokémon -->
+<div id="moveModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+    <div style="background: white; padding: 20px; border-radius: 8px; max-width: 400px; width: 90%;">
+        <h3 style="margin-top: 0;">Mover Pokémon</h3>
+        <p id="modalPokemonName" style="color: #666; margin-bottom: 15px;"></p>
+        
+        <label style="display: block; margin-bottom: 10px; font-weight: bold;">Selecione a Box de destino:</label>
+        <select id="targetBox" style="width: 100%; padding: 8px; margin-bottom: 15px; border-radius: 4px; border: 1px solid #ddd;">
+            {% for b in boxes %}
+                <option value="{{ b.id }}" {% if b.id == box.id %}disabled{% endif %}>{{ b.name }}</option>
+            {% endfor %}
+        </select>
+        
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button onclick="closeMoveModal()" style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancelar</button>
+            <button onclick="movePokemon()" style="padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">Mover</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentPokemonId = null;
+
+function showMoveModal(pokemonId, pokemonName) {
+    currentPokemonId = pokemonId;
+    document.getElementById('modalPokemonName').textContent = pokemonName;
+    document.getElementById('moveModal').style.display = 'flex';
+}
+
+function closeMoveModal() {
+    document.getElementById('moveModal').style.display = 'none';
+    currentPokemonId = null;
+}
+
+function movePokemon() {
+    const targetBoxId = document.getElementById('targetBox').value;
+    
+    fetch('/boxes/move_to_box', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            pokemon_id: currentPokemonId,
+            to_box_id: targetBoxId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            closeMoveModal();
+            location.reload();
+        } else {
+            alert('Erro ao mover Pokémon: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        alert('Erro ao mover Pokémon');
+    });
+}
+
+// Fechar modal ao clicar fora
+document.getElementById('moveModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeMoveModal();
+    }
+});
+</script>
+
+<script src="{{ url_for('static', filename='js/boxes_dragdrop.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,428 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .form-container {
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+        max-width: 900px;
+        margin: 0 auto;
+    }
+    
+    .form-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #f0f0f0;
+    }
+    
+    .form-title h2 {
+        margin: 0;
+        color: #333;
+    }
+    
+    .form-title p {
+        margin: 5px 0 0 0;
+        color: #666;
+    }
+    
+    .preview-section {
+        display: flex;
+        gap: 30px;
+        margin-bottom: 30px;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+    
+    .sprite-preview {
+        width: 150px;
+        height: 150px;
+        background: white;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px dashed #ddd;
+    }
+    
+    .sprite-preview img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+    }
+    
+    .preview-info {
+        flex: 1;
+    }
+    
+    .preview-info h3 {
+        margin: 0 0 10px 0;
+        color: #333;
+    }
+    
+    .form-section {
+        margin-bottom: 30px;
+    }
+    
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+    }
+    
+    .form-group {
+        margin-bottom: 15px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 500;
+        color: #333;
+    }
+    
+    .form-group input,
+    .form-group select {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 1rem;
+        transition: border-color 0.2s;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus {
+        outline: none;
+        border-color: #007bff;
+    }
+    
+    .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .checkbox-group input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .shiny-checkbox {
+        background: linear-gradient(135deg, #fff8e1, #ffecb3);
+        padding: 15px;
+        border-radius: 8px;
+        border: 2px solid #ffd700;
+    }
+    
+    .attributes-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 10px;
+    }
+    
+    .attribute-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px;
+        background: #f8f9fa;
+        border-radius: 6px;
+    }
+    
+    .submit-btn {
+        width: 100%;
+        padding: 15px;
+        background: linear-gradient(135deg, #28a745, #218838);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+    }
+    
+    .back-link {
+        display: inline-block;
+        margin-bottom: 20px;
+        color: #007bff;
+        text-decoration: none;
+        font-weight: bold;
+    }
+    
+    .back-link:hover {
+        text-decoration: underline;
+    }
+</style>
+
+<a href="{{ url_for('pokemon.list_pokemon') }}" class="back-link">← Voltar para Coleção</a>
+
+<div class="form-container">
+    <div class="form-header">
+        <div class="form-title">
+            <h2>Adicionar Pokémon Manualmente</h2>
+            <p>Preencha os dados do indivíduo para adicioná-lo à sua coleção</p>
+        </div>
+    </div>
+
+    <form action="{{ url_for('pokemon.add_pokemon') }}" method="POST">
+        <!-- Preview Section -->
+        <div class="preview-section">
+            <div class="sprite-preview" id="spritePreview">
+                <span style="color: #999;">Selecione uma espécie</span>
+            </div>
+            <div class="preview-info">
+                <h3 id="previewName">-</h3>
+                <p id="previewNumber" style="color: #666;">#----</p>
+                <p id="previewDescription" style="color: #666; font-size: 0.9rem; margin-top: 10px;">-</p>
+            </div>
+        </div>
+
+        <!-- Informações Básicas -->
+        <div class="form-section">
+            <h3 class="section-title">Informações Básicas</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="species_id">Espécie *</label>
+                    <select name="species_id" id="species_id" required onchange="updateForm()">
+                        <option value="">Selecione...</option>
+                        {% for sp in species_list %}
+                            <option value="{{ sp.id }}" 
+                                    data-name="{{ sp.name }}" 
+                                    data-description="{{ sp.description or '' }}"
+                                    data-sprite="{{ sp.forms[0].sprite_url if sp.forms else '' }}">
+                                #{{ "%04d" | format(sp.id) }} - {{ sp.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="form_variant_id">Forma *</label>
+                    <select name="form_variant_id" id="form_variant_id" required>
+                        <option value="">Selecione a espécie primeiro</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="origin_game_id">Jogo de Origem *</label>
+                    <select name="origin_game_id" id="origin_game_id" required>
+                        <option value="">Selecione...</option>
+                        {% for game in games_list %}
+                            <option value="{{ game.id }}">{{ game.name }} (Gen {{ game.generation }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="nickname">Apelido</label>
+                    <input type="text" name="nickname" id="nickname" maxlength="32" placeholder="Opcional">
+                </div>
+            </div>
+        </div>
+
+        <!-- Status e Aparência -->
+        <div class="form-section">
+            <h3 class="section-title">Status e Aparência</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="level">Level *</label>
+                    <input type="number" name="level" id="level" min="1" max="100" value="1" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="gender">Sexo</label>
+                    <select name="gender" id="gender">
+                        <option value="M">Macho (♂)</option>
+                        <option value="F">Fêmea (♀)</option>
+                        <option value="U" selected>Desconhecido</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="ot_name">Original Trainer (OT) *</label>
+                    <input type="text" name="ot_name" id="ot_name" required value="Gabriel" maxlength="32">
+                </div>
+
+                <div class="form-group">
+                    <label for="ot_id">OT ID *</label>
+                    <input type="number" name="ot_id" id="ot_id" required value="00000" min="0" max="99999">
+                </div>
+            </div>
+
+            <div class="shiny-checkbox" style="margin-top: 20px;">
+                <div class="checkbox-group">
+                    <input type="checkbox" name="is_shiny" id="is_shiny">
+                    <label for="is_shiny" style="font-weight: bold; color: #f57c00;">✨ Este Pokémon é Shiny</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detalhes Adicionais -->
+        <div class="form-section">
+            <h3 class="section-title">Detalhes Adicionais</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="nature">Natureza</label>
+                    <select name="nature" id="nature">
+                        <option value="">Selecione...</option>
+                        <option value="Hardy">Hardy</option>
+                        <option value="Lonely">Lonely</option>
+                        <option value="Brave">Brave</option>
+                        <option value="Adamant">Adamant</option>
+                        <option value="Naughty">Naughty</option>
+                        <option value="Bold">Bold</option>
+                        <option value="Docile">Docile</option>
+                        <option value="Relaxed">Relaxed</option>
+                        <option value="Impish">Impish</option>
+                        <option value="Lax">Lax</option>
+                        <option value="Timid">Timid</option>
+                        <option value="Hasty">Hasty</option>
+                        <option value="Serious">Serious</option>
+                        <option value="Jolly">Jolly</option>
+                        <option value="Naive">Naive</option>
+                        <option value="Modest">Modest</option>
+                        <option value="Mild">Mild</option>
+                        <option value="Quiet">Quiet</option>
+                        <option value="Bashful">Bashful</option>
+                        <option value="Rash">Rash</option>
+                        <option value="Calm">Calm</option>
+                        <option value="Gentle">Gentle</option>
+                        <option value="Sassy">Sassy</option>
+                        <option value="Careful">Careful</option>
+                        <option value="Quirky">Quirky</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="ability">Habilidade</label>
+                    <input type="text" name="ability" id="ability" placeholder="Ex: Overgrow">
+                </div>
+
+                <div class="form-group">
+                    <label for="pokeball">Pokébola</label>
+                    <select name="pokeball" id="pokeball">
+                        <option value="Poké Ball">Poké Ball</option>
+                        <option value="Great Ball">Great Ball</option>
+                        <option value="Ultra Ball">Ultra Ball</option>
+                        <option value="Master Ball">Master Ball</option>
+                        <option value="Safari Ball">Safari Ball</option>
+                        <option value="Net Ball">Net Ball</option>
+                        <option value="Dive Ball">Dive Ball</option>
+                        <option value="Nest Ball">Nest Ball</option>
+                        <option value="Repeat Ball">Repeat Ball</option>
+                        <option value="Timer Ball">Timer Ball</option>
+                        <option value="Luxury Ball">Luxury Ball</option>
+                        <option value="Premier Ball">Premier Ball</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Atributos Dinâmicos -->
+        <div class="form-section">
+            <h3 class="section-title">Atributos Especiais</h3>
+            <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">Selecione os atributos que se aplicam a este indivíduo</p>
+            
+            <div class="attributes-grid">
+                {% for cat in categories %}
+                <div class="attribute-item">
+                    <input type="checkbox" name="attributes" value="{{ cat.id }}" id="attr_{{ cat.id }}">
+                    <label for="attr_{{ cat.id }}">{{ cat.name }}</label>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <button type="submit" class="submit-btn">🎮 Adicionar Pokémon à Coleção</button>
+    </form>
+</div>
+
+<script>
+// Dados das formas (seria ideal vir do backend)
+const formsData = {
+    {% for sp in species_list %}
+    "{{ sp.id }}": [
+        {% for form in sp.forms %}
+        {
+            "id": "{{ form.id }}",
+            "name": "{{ form.display_name }}",
+            "identifier": "{{ form.form_identifier }}",
+            "sprite": "{{ form.sprite_url or '' }}"
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ],
+    {% endfor %}
+};
+
+function updateForm() {
+    const speciesSelect = document.getElementById('species_id');
+    const formSelect = document.getElementById('form_variant_id');
+    const selectedOption = speciesSelect.options[speciesSelect.selectedIndex];
+    
+    // Atualizar preview
+    const spritePreview = document.getElementById('spritePreview');
+    const previewName = document.getElementById('previewName');
+    const previewNumber = document.getElementById('previewNumber');
+    const previewDescription = document.getElementById('previewDescription');
+    
+    if (selectedOption.value) {
+        const spriteUrl = selectedOption.dataset.sprite;
+        const name = selectedOption.dataset.name;
+        const description = selectedOption.dataset.description;
+        
+        if (spriteUrl) {
+            spritePreview.innerHTML = `<img src="${spriteUrl}" alt="${name}">`;
+        } else {
+            spritePreview.innerHTML = '<span style="color: #999;">Sem sprite</span>';
+        }
+        
+        previewName.textContent = name;
+        previewNumber.textContent = '#' + speciesSelect.value.padStart(4, '0');
+        previewDescription.textContent = description || 'Descrição não disponível';
+        
+        // Atualizar formas
+        const speciesId = speciesSelect.value;
+        const forms = formsData[speciesId] || [];
+        
+        formSelect.innerHTML = '<option value="">Selecione...</option>';
+        forms.forEach(form => {
+            const option = document.createElement('option');
+            option.value = form.id;
+            option.textContent = form.name;
+            formSelect.appendChild(option);
+        });
+        
+        if (forms.length > 0) {
+            formSelect.value = forms[0].id;
+        }
+    } else {
+        spritePreview.innerHTML = '<span style="color: #999;">Selecione uma espécie</span>';
+        previewName.textContent = '-';
+        previewNumber.textContent = '#----';
+        previewDescription.textContent = '-';
+        formSelect.innerHTML = '<option value="">Selecione a espécie primeiro</option>';
+    }
+}
+</script>
+{% endblock %}

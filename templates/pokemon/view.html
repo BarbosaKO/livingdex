@@ -1,0 +1,272 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .pokemon-detail {
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .detail-header {
+        display: flex;
+        align-items: center;
+        gap: 30px;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #f0f0f0;
+    }
+    
+    .pokemon-sprite-large {
+        width: 200px;
+        height: 200px;
+        object-fit: contain;
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 20px;
+    }
+    
+    .pokemon-info {
+        flex: 1;
+    }
+    
+    .pokemon-number {
+        font-size: 1.5rem;
+        color: #666;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+    
+    .pokemon-name {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #333;
+        margin: 0 0 10px 0;
+        text-transform: capitalize;
+    }
+    
+    .pokemon-form {
+        color: #666;
+        font-size: 1.1rem;
+        margin-bottom: 15px;
+    }
+    
+    .shiny-badge {
+        background: linear-gradient(135deg, #ffd700, #ffed4e);
+        color: #333;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 0.9rem;
+        font-weight: bold;
+        display: inline-block;
+    }
+    
+    .info-section {
+        margin-bottom: 25px;
+    }
+    
+    .section-title {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+    }
+    
+    .info-item {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+    }
+    
+    .info-label {
+        font-size: 0.85rem;
+        color: #666;
+        margin-bottom: 5px;
+    }
+    
+    .info-value {
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: #333;
+    }
+    
+    .back-link {
+        display: inline-block;
+        margin-bottom: 20px;
+        color: #007bff;
+        text-decoration: none;
+        font-weight: bold;
+    }
+    
+    .back-link:hover {
+        text-decoration: underline;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+    }
+    
+    .action-btn {
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: bold;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .delete-btn {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .delete-btn:hover {
+        background: #c82333;
+    }
+</style>
+
+<a href="{{ url_for('pokemon.list_pokemon') }}" class="back-link">← Voltar para Coleção</a>
+
+<div class="pokemon-detail">
+    <div class="detail-header">
+        {% if pokemon.form_variant.sprite_url %}
+            <img src="{{ pokemon.form_variant.sprite_url }}" alt="{{ pokemon.species.name }}" class="pokemon-sprite-large">
+        {% else %}
+            <div class="pokemon-sprite-large" style="display: flex; align-items: center; justify-content: center;">
+                <span style="color: #999;">No sprite</span>
+            </div>
+        {% endif %}
+        
+        <div class="pokemon-info">
+            <div class="pokemon-number">#{{ "%04d" | format(pokemon.species_id) }}</div>
+            <h1 class="pokemon-name">{{ pokemon.nickname or pokemon.species.name }}</h1>
+            {% if pokemon.form_variant.form_identifier != 'normal' %}
+                <div class="pokemon-form">{{ pokemon.form_variant.display_name }}</div>
+            {% endif %}
+            {% if pokemon.is_shiny %}
+                <div class="shiny-badge">✨ Shiny</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="info-section">
+        <h3 class="section-title">Informações Básicas</h3>
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">Espécie</div>
+                <div class="info-value">{{ pokemon.species.name }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Level</div>
+                <div class="info-value">{{ pokemon.level }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Gênero</div>
+                <div class="info-value">
+                    {% if pokemon.gender == 'M' %}♂ Macho
+                    {% elif pokemon.gender == 'F' %}♀ Fêmea
+                    {% else %}Desconhecido
+                    {% endif %}
+                </div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Apelido</div>
+                <div class="info-value">{{ pokemon.nickname or '-' }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="info-section">
+        <h3 class="section-title">Origem</h3>
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">Original Trainer</div>
+                <div class="info-value">{{ pokemon.ot_name }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">OT ID</div>
+                <div class="info-value">{{ pokemon.ot_id }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Pokébola</div>
+                <div class="info-value">{{ pokemon.pokeball }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Jogo de Origem</div>
+                <div class="info-value">{{ origin_game.name if origin_game else 'Desconhecido' }}</div>
+            </div>
+        </div>
+    </div>
+
+    {% if pokemon.nature or pokemon.ability %}
+    <div class="info-section">
+        <h3 class="section-title">Características</h3>
+        <div class="info-grid">
+            {% if pokemon.nature %}
+            <div class="info-item">
+                <div class="info-label">Natureza</div>
+                <div class="info-value">{{ pokemon.nature }}</div>
+            </div>
+            {% endif %}
+            {% if pokemon.ability %}
+            <div class="info-item">
+                <div class="info-label">Habilidade</div>
+                <div class="info-value">{{ pokemon.ability }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if pokemon.move_1 or pokemon.move_2 or pokemon.move_3 or pokemon.move_4 %}
+    <div class="info-section">
+        <h3 class="section-title">Moves</h3>
+        <div class="info-grid">
+            {% if pokemon.move_1 %}
+            <div class="info-item">
+                <div class="info-label">Move 1</div>
+                <div class="info-value">{{ pokemon.move_1 }}</div>
+            </div>
+            {% endif %}
+            {% if pokemon.move_2 %}
+            <div class="info-item">
+                <div class="info-label">Move 2</div>
+                <div class="info-value">{{ pokemon.move_2 }}</div>
+            </div>
+            {% endif %}
+            {% if pokemon.move_3 %}
+            <div class="info-item">
+                <div class="info-label">Move 3</div>
+                <div class="info-value">{{ pokemon.move_3 }}</div>
+            </div>
+            {% endif %}
+            {% if pokemon.move_4 %}
+            <div class="info-item">
+                <div class="info-label">Move 4</div>
+                <div class="info-value">{{ pokemon.move_4 }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="action-buttons">
+        <form action="/pokemon/{{ pokemon.id }}/delete" method="POST" onsubmit="return confirm('Tem certeza que deseja excluir este Pokémon?');">
+            <button type="submit" class="action-btn delete-btn">🗑️ Excluir Pokémon</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
