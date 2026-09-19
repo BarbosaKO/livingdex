@@ -79,6 +79,14 @@ def upload_save():
         # Busca no banco quais PIDs já existem para mostrar na tela de Diff
         existing_pids = [p[0] for p in db.session.query(PokemonInstance.pid).filter(PokemonInstance.pid.isnot(None)).all()]
         
+        # Adicionar nomes das espécies para melhorar a visualização
+        for pkm in parsed_pokemon:
+            species = Species.query.get(pkm['species_id'])
+            if species:
+                pkm['species_name'] = species.name
+            else:
+                pkm['species_name'] = f"#{pkm['species_id']}"
+        
         return render_template('saves/staging.html', 
                                filename=safe_filename, 
                                file_hash=file_hash, 
@@ -134,8 +142,11 @@ def commit_import():
                 origin_game_id=origin_game_id,
                 nickname=pkm.get('nickname'),
                 level=pkm.get('level', 1),
+                gender=pkm.get('gender', 'U'),
                 is_shiny=pkm.get('is_shiny', False),
                 ot_name=pkm.get('ot_name', 'Unknown'),
+                ot_id=pkm.get('ot_id', 0),
+                ot_sid=pkm.get('secret_id', 0),
                 pid=pkm.get('pid')
             )
             db.session.add(new_instance)

@@ -2,6 +2,38 @@
 
 {% block content %}
 <style>
+    .loading-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.7);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .loading-content {
+        background: white;
+        padding: 40px;
+        border-radius: 12px;
+        text-align: center;
+        max-width: 400px;
+    }
+    
+    .loading-spinner {
+        font-size: 3rem;
+        margin-bottom: 20px;
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+<style>
     .staging-container {
         background: white;
         padding: 30px;
@@ -192,7 +224,12 @@
                     <span class="pokemon-number">#{{ "%04d" | format(pkm.species_id) }}</span>
                 </div>
                 
-                <div class="pokemon-name">{{ pkm.nickname or 'Unknown' }}</div>
+                <div class="pokemon-name">
+                    {{ pkm.nickname or pkm.get('species_name', 'Unknown') }}
+                    {% if pkm.nickname and pkm.get('species_name') %}
+                        <small style="color: #666;">({{ pkm.species_name }})</small>
+                    {% endif %}
+                </div>
                 
                 <div class="pokemon-details">
                     <div>Espécie: #{{ pkm.species_id }}</div>
@@ -240,6 +277,16 @@
     </div>
 </div>
 
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-content">
+        <div class="loading-spinner">🔄</div>
+        <h3 style="margin: 0 0 10px 0; color: #333;">Importando Pokémon</h3>
+        <p style="color: #666; margin: 0;">Salvando no banco de dados...</p>
+        <p style="color: #999; font-size: 0.9rem; margin-top: 20px;">Isso pode levar alguns segundos.</p>
+    </div>
+</div>
+
 <script>
     document.getElementById('select-all').addEventListener('change', function(e) {
         const checkboxes = document.querySelectorAll('.pokemon-checkbox:not(:disabled)');
@@ -275,6 +322,11 @@
             return;
         }
 
+        // Mostrar loading overlay
+        document.getElementById('loadingOverlay').style.display = 'flex';
+        document.getElementById('btn-commit').disabled = true;
+        document.getElementById('btn-commit').textContent = 'Importando...';
+
         const selectedPokemon = Array.from(checkboxes).map(cb => JSON.parse(cb.getAttribute('data-pkm')));
 
         fetch('/saves/commit', {
@@ -295,11 +347,19 @@
                 window.location.href = '/pokemon';
             } else {
                 alert('Erro: ' + data.message);
+                // Esconder loading overlay em caso de erro
+                document.getElementById('loadingOverlay').style.display = 'none';
+                document.getElementById('btn-commit').disabled = false;
+                document.getElementById('btn-commit').textContent = '🚀 Importar Selecionados (' + checkboxes.length + ')';
             }
         })
         .catch(error => {
             console.error('Erro de rede:', error);
             alert('Erro de comunicação com o servidor.');
+            // Esconder loading overlay em caso de erro
+            document.getElementById('loadingOverlay').style.display = 'none';
+            document.getElementById('btn-commit').disabled = false;
+            document.getElementById('btn-commit').textContent = '🚀 Importar Selecionados (' + checkboxes.length + ')';
         });
     });
 </script>

@@ -2,172 +2,581 @@
 
 {% block content %}
 <style>
-    .pokemon-detail {
-        background: white;
-        border-radius: 8px;
-        padding: 30px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        max-width: 800px;
+    .pokedex-detail {
+        max-width: 1200px;
         margin: 0 auto;
+        padding: 20px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: #c41010;
+        min-height: 100vh;
+        background-size: 20px 20px;
+        background-position: 0 0, 10px 10px;
     }
     
-    .pokemon-header {
+    .nav-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        padding: 0 20px;
+    }
+    
+    .nav-link {
+        text-decoration: none;
+        color: white;
         display: flex;
         align-items: center;
-        gap: 30px;
-        margin-bottom: 30px;
+        gap: 10px;
+        padding: 15px 20px;
+        background: linear-gradient(135deg, #A0A0A0, #909090);
+        border-radius: 8px;
+        clip-path: polygon(0 0, calc(100% - 15px) 0, 100% 15px, 100% 100%, 15px 100%, 0 calc(100% - 15px));
+        transition: transform 0.2s;
     }
     
-    .pokemon-thumbnail {
-        width: 200px;
-        height: 200px;
+    .nav-link:hover {
+        transform: translateY(-2px);
+    }
+    
+    .nav-number {
+        font-weight: bold;
+        color: #fff;
+        font-size: 0.9rem;
+    }
+    
+    .nav-name {
+        font-weight: bold;
+        text-transform: capitalize;
+        color: #fff;
+    }
+    
+    .main-content {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        margin-bottom: 40px;
+    }
+    
+    .pokemon-image-section {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .pokemon-image-card {
+        background: #F0F0F0;
+        border-radius: 12px;
+        padding: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 400px;
+    }
+    
+    .pokemon-main-image {
+        width: 100%;
+        max-width: 350px;
+        height: auto;
         object-fit: contain;
-        background: #f8f9fa;
+    }
+    
+    .stats-card {
+        background: #8E8E8E;
+        border-radius: 12px;
+        padding: 25px;
+        color: white;
+    }
+    
+    .stats-title {
+        font-size: 1.2rem;
+        font-weight: bold;
+        margin-bottom: 20px;
+        color: #333;
+    }
+    
+    .stat-row {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    
+    .stat-name {
+        width: 100px;
+        font-size: 0.85rem;
+        color: #333;
+        font-weight: bold;
+    }
+    
+    .stat-bar-container {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 8px;
+        height: 20px;
+        overflow: hidden;
+        display: flex;
+        align-items: flex-end;
+    }
+    
+    .stat-bar {
+        height: 100%;
+        background: #3FA5DD;
+        border-radius: 8px;
+        transition: width 0.3s;
+    }
+    
+    .stat-value {
+        width: 40px;
+        text-align: right;
+        font-weight: bold;
+        color: #333;
+        margin-left: 10px;
+    }
+    
+    .pokemon-info-section {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .pokemon-title-card {
+        background: white;
         border-radius: 12px;
         padding: 20px;
+        text-align: center;
+        margin: 10px;
     }
     
-    .pokemon-info {
-        flex: 1;
+    .pokemon-title {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin: 0 0 5px 0;
+        text-transform: capitalize;
+        color: #333;
     }
     
     .pokemon-number {
         font-size: 1.5rem;
         color: #666;
         font-weight: bold;
-        margin-bottom: 5px;
     }
     
-    .pokemon-name {
-        font-size: 2.5rem;
-        font-weight: bold;
-        color: #333;
-        margin: 0 0 10px 0;
-        text-transform: capitalize;
-    }
-    
-    .pokemon-generation {
-        color: #666;
-        font-size: 1rem;
-    }
-    
-    .pokemon-description {
-        background: #f8f9fa;
+    .description-card {
+        background: white;
+        border-radius: 12px;
         padding: 20px;
-        border-radius: 8px;
-        margin-bottom: 30px;
+        color: #333;
         line-height: 1.6;
+    }
+    
+    .versions-section {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+    }
+    
+    .versions-label {
+        font-weight: bold;
+        margin-bottom: 15px;
         color: #333;
     }
     
-    .forms-section {
-        margin-top: 30px;
-    }
-    
-    .forms-section h3 {
-        color: #333;
-        border-bottom: 2px solid #007bff;
-        padding-bottom: 10px;
-        margin-bottom: 20px;
-    }
-    
-    .forms-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    .version-icons {
+        display: flex;
         gap: 15px;
     }
     
-    .form-card {
-        background: #f8f9fa;
-        border-radius: 8px;
-        padding: 15px;
-        text-align: center;
-        border: 2px solid #e9ecef;
+    .version-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: #3FA5DD;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        border: 3px solid white;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
     
-    .form-card:hover {
-        border-color: #007bff;
+    .version-icon.red {
+        background: #E33A3A;
     }
     
-    .form-sprite {
+    .info-card {
+        background: #3296C8;
+        border-radius: 12px;
+        padding: 25px;
+        color: white;
+    }
+    
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+    
+    .info-item {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .info-label {
+        font-size: 0.85rem;
+        opacity: 0.9;
+        margin-bottom: 5px;
+        color: #E0F0FF;
+    }
+    
+    .info-value {
+        font-weight: bold;
+        font-size: 1.1rem;
+    }
+    
+    .types-section {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+    }
+    
+    .types-label {
+        font-weight: bold;
+        margin-bottom: 15px;
+        color: #333;
+    }
+    
+    .type-badges {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .type-badge {
+        padding: 10px 20px;
+        border-radius: 20px;
+        color: white;
+        font-weight: bold;
+        text-transform: uppercase;
+        font-size: 0.9rem;
+    }
+    
+    .type-normal { background: #A8A77A; }
+    .type-fire { background: #EE8130; }
+    .type-water { background: #6390F0; }
+    .type-electric { background: #F7D02C; color: #333; }
+    .type-grass { background: #9BCC50; }
+    .type-ice { background: #96D9D6; color: #333; }
+    .type-fighting { background: #C22E28; }
+    .type-poison { background: #B97FC9; }
+    .type-ground { background: #E2BF65; }
+    .type-flying { background: #51C4E7; }
+    .type-psychic { background: #F366B9; }
+    .type-bug { background: #A6B91A; }
+    .type-rock { background: #B6A136; }
+    .type-ghost { background: #735797; }
+    .type-dragon { background: #6F35FC; }
+    .type-dark { background: #705746; }
+    .type-steel { background: #B7B7CE; color: #333; }
+    .type-fairy { background: #D685AD; }
+    
+    .weaknesses-section {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+    }
+    
+    .weaknesses-label {
+        font-weight: bold;
+        margin-bottom: 15px;
+        color: #333;
+    }
+    
+    .evolutions-section {
+        background: #505050;
+        border-radius: 12px;
+        padding: 25px;
+        color: white;
+        background-image: 
+            linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.1) 75%, rgba(255,255,255,0.1)),
+            linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.1) 75%, rgba(255,255,255,0.1));
+        background-size: 10px 10px;
+        background-position: 0 0, 5px 5px;
+    }
+    
+    .evolutions-label {
+        font-weight: bold;
+        margin-bottom: 20px;
+        font-size: 1.2rem;
+    }
+    
+    .evolution-chain {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+    
+    .evolution-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .evolution-image {
         width: 80px;
         height: 80px;
+        border-radius: 50%;
         object-fit: contain;
-        margin: 0 auto 10px;
+        background: #f8f9fa;
+        padding: 10px;
+        border: 4px solid white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     }
     
-    .form-name {
+    .evolution-name {
         font-weight: bold;
-        color: #333;
         text-transform: capitalize;
+        font-size: 0.9rem;
+        color: white;
     }
     
-    .back-link {
-        display: inline-block;
-        margin-bottom: 20px;
-        color: #007bff;
-        text-decoration: none;
+    .evolution-arrow {
+        font-size: 2rem;
+        color: white;
         font-weight: bold;
     }
     
-    .back-link:hover {
-        text-decoration: underline;
+    .play-sound-btn {
+        background: #3296C8;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1rem;
+        margin-top: 10px;
+        transition: background 0.2s;
+        font-weight: bold;
+    }
+    
+    .play-sound-btn:hover {
+        background: #2876A6;
     }
 </style>
 
-<a href="{{ url_for('pokedex.pokedex_index') }}" class="back-link">← Voltar para Pokédex</a>
-
-<div class="pokemon-detail">
-    <div class="pokemon-header">
-        {% if species.forms and species.forms[0].thumbnail_url %}
-            <img src="{{ species.forms[0].thumbnail_url }}" alt="{{ species.name }}" class="pokemon-thumbnail">
-        {% elif species.forms and species.forms[0].sprite_url %}
-            <img src="{{ species.forms[0].sprite_url }}" alt="{{ species.name }}" class="pokemon-thumbnail">
+<div class="pokedex-detail">
+    <div class="nav-header">
+        {% if previous_id %}
+            <a href="{{ url_for('pokedex.pokedex_detail', species_id=previous_id) }}" class="nav-link">
+                <span>◀</span>
+                <div>
+                    <div class="nav-number">Nº {{ previous_id }}</div>
+                    <div class="nav-name">{{ previous_name }}</div>
+                </div>
+            </a>
         {% else %}
-            <div class="pokemon-thumbnail" style="display: flex; align-items: center; justify-content: center;">
-                <span style="color: #999;">No sprite</span>
+            <div class="nav-link" style="opacity: 0.5;">
+                <span>◀</span>
+                <div>
+                    <div class="nav-number">-</div>
+                    <div class="nav-name">-</div>
+                </div>
             </div>
         {% endif %}
         
-        <div class="pokemon-info">
-            <div class="pokemon-number">#{{ "%04d" | format(species.id) }}</div>
-            <h1 class="pokemon-name">{{ species.name }}</h1>
-            <div class="pokemon-generation">Geração {{ species.generation_introduced }}</div>
-            {% if species.has_gender_differences %}
-                <div style="margin-top: 10px; color: #666;">Possui diferenças de gênero</div>
-            {% endif %}
-        </div>
+        <a href="{{ url_for('pokedex.pokedex_index') }}" class="nav-link" style="background: #A0A0A0;">
+            <div>
+                <div class="nav-number">Pokédex</div>
+                <div class="nav-name">Lista</div>
+            </div>
+        </a>
+        
+        {% if next_id %}
+            <a href="{{ url_for('pokedex.pokedex_detail', species_id=next_id) }}" class="nav-link">
+                <div>
+                    <div class="nav-number">Nº {{ next_id }}</div>
+                    <div class="nav-name">{{ next_name }}</div>
+                </div>
+                <span>▶</span>
+            </a>
+        {% else %}
+            <div class="nav-link" style="opacity: 0.5;">
+                <div>
+                    <div class="nav-number">-</div>
+                    <div class="nav-name">-</div>
+                </div>
+                <span>▶</span>
+            </div>
+        {% endif %}
     </div>
-    
-    <div class="pokemon-description">
-        <h3 style="margin-top: 0; color: #333;">Descrição</h3>
-        <p>{{ species.description or 'Descrição não disponível.' }}</p>
+
+    <div class="pokemon-title-card">
+        <h1 class="pokemon-title">{{ species.name }}</h1>
+        <div class="pokemon-number">Nº {{ "%04d" | format(species.id) }}</div>
     </div>
-    
-    {% if species.forms %}
-    <div class="forms-section">
-        <h3>Formas Disponíveis</h3>
-        <div class="forms-grid">
-            {% for form in species.forms %}
-            <div class="form-card">
-                {% if form.sprite_url %}
-                    <img src="{{ form.sprite_url }}" alt="{{ form.display_name }}" class="form-sprite">
+
+    <div class="main-content">
+        <div class="pokemon-image-section">
+            <div class="pokemon-image-card">
+                {% if species.forms and species.forms[0].thumbnail_url %}
+                    <img src="{{ species.forms[0].thumbnail_url }}" alt="{{ species.name }}" class="pokemon-main-image">
+                {% elif species.forms and species.forms[0].sprite_url %}
+                    <img src="{{ species.forms[0].sprite_url }}" alt="{{ species.name }}" class="pokemon-main-image">
                 {% else %}
-                    <div class="form-sprite" style="display: flex; align-items: center; justify-content: center; background: #e9ecef; border-radius: 4px;">
-                        <span style="color: #999; font-size: 0.8rem;">No sprite</span>
+                    <div class="pokemon-main-image" style="display: flex; align-items: center; justify-content: center;">
+                        <span style="color: #999;">No sprite</span>
                     </div>
                 {% endif %}
-                <div class="form-name">{{ form.display_name }}</div>
-                {% if form.is_battle_only %}
-                    <div style="font-size: 0.8rem; color: #666; margin-top: 5px;">Apenas batalha</div>
-                {% endif %}
-                {% if form.is_go_costume %}
-                    <div style="font-size: 0.8rem; color: #666; margin-top: 5px;">Traje GO</div>
+            </div>
+            
+            <button class="play-sound-btn" onclick="playCry()">🔊 Tocar Som</button>
+            
+            <div class="stats-card">
+                <div class="stats-title">Estatísticas</div>
+                {% if species.stats_dict %}
+                    {% for stat_name, stat_value in species.stats_dict.items() %}
+                    <div class="stat-row">
+                        <div class="stat-name">{{ stat_name }}</div>
+                        <div class="stat-bar-container">
+                            <div class="stat-bar" style="width: {{ (stat_value / 255 * 100) }}%;"></div>
+                        </div>
+                        <div class="stat-value">{{ stat_value }}</div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="stat-row">
+                        <div class="stat-name">HP</div>
+                        <div class="stat-bar-container">
+                            <div class="stat-bar" style="width: 45%;"></div>
+                        </div>
+                        <div class="stat-value">45</div>
+                    </div>
+                    <div class="stat-row">
+                        <div class="stat-name">Attack</div>
+                        <div class="stat-bar-container">
+                            <div class="stat-bar" style="width: 19%;"></div>
+                        </div>
+                        <div class="stat-value">49</div>
+                    </div>
+                    <div class="stat-row">
+                        <div class="stat-name">Defense</div>
+                        <div class="stat-bar-container">
+                            <div class="stat-bar" style="width: 19%;"></div>
+                        </div>
+                        <div class="stat-value">49</div>
+                    </div>
+                    <div class="stat-row">
+                        <div class="stat-name">Sp. Attack</div>
+                        <div class="stat-bar-container">
+                            <div class="stat-bar" style="width: 25%;"></div>
+                        </div>
+                        <div class="stat-value">65</div>
+                    </div>
+                    <div class="stat-row">
+                        <div class="stat-name">Sp. Defense</div>
+                        <div class="stat-bar-container">
+                            <div class="stat-bar" style="width: 23%;"></div>
+                        </div>
+                        <div class="stat-value">65</div>
+                    </div>
+                    <div class="stat-row">
+                        <div class="stat-name">Speed</div>
+                        <div class="stat-bar-container">
+                            <div class="stat-bar" style="width: 17%;"></div>
+                        </div>
+                        <div class="stat-value">45</div>
+                    </div>
                 {% endif %}
             </div>
-            {% endfor %}
+        </div>
+        
+        <div class="pokemon-info-section">
+            <div class="description-card">
+                <p>
+                    {{ species.description or 'Descrição não disponível.' }}
+                </p>
+            </div>
+            
+            <div class="info-card">
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Altura</div>
+                        <div class="info-value">{{ species.height or '-' }} m</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Peso</div>
+                        <div class="info-value">{{ species.weight or '-' }} kg</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Sexo</div>
+                        <div class="info-value">
+                            {% if species.has_gender_differences %}
+                                ♂ ♀
+                            {% else %}
+                                -
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Categoria</div>
+                        <div class="info-value">{{ species.category or '-' }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Habilidades</div>
+                        <div class="info-value">{{ species.abilities or '-' }}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="types-section">
+                <div class="types-label">Tipo:</div>
+                <div class="type-badges">
+                    {% if species.types_list %}
+                        {% for type in species.types_list %}
+                            <span class="type-badge type-{{ type.lower() }}">{{ type }}</span>
+                        {% endfor %}
+                    {% else %}
+                        <span class="type-badge type-normal">Normal</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="weaknesses-section">
+                <div class="weaknesses-label">Fraquezas:</div>
+                <div class="type-badges">
+                    {% if species.weaknesses_list %}
+                        {% for weakness in species.weaknesses_list %}
+                            <span class="type-badge type-{{ weakness.lower() }}">{{ weakness }}</span>
+                        {% endfor %}
+                    {% else %}
+                        <span class="type-badge type-normal">Nenhuma</span>
+                    {% endif %}
+                </div>
+            </div>
         </div>
     </div>
-    {% endif %}
+    
 </div>
+
+<script>
+// Tocar som do Pokémon automaticamente ao carregar a página
+document.addEventListener('DOMContentLoaded', function() {
+    const speciesId = {{ species.id }};
+    const cryPath = `/static/cries/${speciesId}.ogg`;
+    
+    const audio = new Audio(cryPath);
+    
+    // Tocar automaticamente ao carregar
+    audio.play().catch(error => {
+        console.log('Não foi possível tocar o som automaticamente:', error);
+    });
+    
+    // Função global para tocar o som manualmente
+    window.playCry = function() {
+        audio.currentTime = 0;
+        audio.play().catch(error => console.log('Erro ao tocar som:', error));
+    };
+});
+</script>
 {% endblock %}

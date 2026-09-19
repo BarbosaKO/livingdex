@@ -176,7 +176,7 @@
         </ul>
     </div>
 
-    <form action="{{ url_for('saves.upload_save') }}" method="POST" enctype="multipart/form-data">
+    <form action="{{ url_for('saves.upload_save') }}" method="POST" enctype="multipart/form-data" id="uploadForm">
         <div class="form-group">
             <label for="generation">Geração do Jogo:</label>
             <select name="generation" id="generation" required>
@@ -196,10 +196,20 @@
             </div>
         </div>
 
-        <button type="submit" class="upload-btn">
+        <button type="submit" class="upload-btn" id="uploadBtn">
             🚀 Enviar e Analisar Save
         </button>
     </form>
+    
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; align-items: center; justify-content: center;">
+        <div style="background: white; padding: 40px; border-radius: 12px; text-align: center; max-width: 400px;">
+            <div style="font-size: 3rem; margin-bottom: 20px;">🔄</div>
+            <h3 style="margin: 0 0 10px 0; color: #333;">Processando Save</h3>
+            <p style="color: #666; margin: 0;">Analisando arquivo e extraindo Pokémon...</p>
+            <p style="color: #999; font-size: 0.9rem; margin-top: 20px;">Isso pode levar alguns segundos.</p>
+        </div>
+    </div>
 </div>
 
 {% if files %}
@@ -220,6 +230,12 @@
 document.getElementById('save_file').addEventListener('change', function(e) {
     const fileName = e.target.files[0]?.name || 'Clique ou arraste o arquivo .sav aqui';
     document.getElementById('file-label').textContent = fileName;
+});
+
+document.getElementById('uploadForm').addEventListener('submit', function(e) {
+    document.getElementById('loadingOverlay').style.display = 'flex';
+    document.getElementById('uploadBtn').disabled = true;
+    document.getElementById('uploadBtn').textContent = 'Enviando...';
 });
 </script>
 {% endblock %}

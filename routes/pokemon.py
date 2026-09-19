@@ -12,6 +12,87 @@ pokemon_bp = Blueprint('pokemon', __name__, url_prefix='/pokemon')
 # Pokédex routes (sem prefixo /pokemon)
 pokedex_bp = Blueprint('pokedex', __name__, url_prefix='/pokedex')
 
+def calculate_weaknesses(types_list):
+    """Calcula fraquezas baseado nos tipos do Pokémon considerando múltiplos tipos"""
+    if not types_list:
+        return []
+    
+    # Tabela completa de interações de tipo (multiplicadores de dano)
+    # Formato: {atacante: {defensor: multiplicador}}
+    TYPE_CHART = {
+        'Normal': {'Normal': 1, 'Fire': 1, 'Water': 1, 'Electric': 1, 'Grass': 1, 'Ice': 1, 
+                   'Fighting': 1, 'Poison': 1, 'Ground': 1, 'Flying': 1, 'Psychic': 1, 'Bug': 1, 
+                   'Rock': 0.5, 'Ghost': 0, 'Dragon': 1, 'Dark': 1, 'Steel': 0.5, 'Fairy': 1},
+        'Fire': {'Normal': 1, 'Fire': 0.5, 'Water': 0.5, 'Electric': 1, 'Grass': 2, 'Ice': 2, 
+                 'Fighting': 1, 'Poison': 1, 'Ground': 1, 'Flying': 1, 'Psychic': 1, 'Bug': 2, 
+                 'Rock': 0.5, 'Ghost': 1, 'Dragon': 0.5, 'Dark': 1, 'Steel': 2, 'Fairy': 0.5},
+        'Water': {'Normal': 1, 'Fire': 2, 'Water': 0.5, 'Electric': 1, 'Grass': 0.5, 'Ice': 1, 
+                  'Fighting': 1, 'Poison': 1, 'Ground': 2, 'Flying': 1, 'Psychic': 1, 'Bug': 1, 
+                  'Rock': 2, 'Ghost': 1, 'Dragon': 0.5, 'Dark': 1, 'Steel': 1, 'Fairy': 1},
+        'Electric': {'Normal': 1, 'Fire': 1, 'Water': 2, 'Electric': 0.5, 'Grass': 0.5, 'Ice': 1, 
+                     'Fighting': 1, 'Poison': 1, 'Ground': 0, 'Flying': 2, 'Psychic': 1, 'Bug': 1, 
+                     'Rock': 1, 'Ghost': 1, 'Dragon': 0.5, 'Dark': 1, 'Steel': 1, 'Fairy': 1},
+        'Grass': {'Normal': 1, 'Fire': 0.5, 'Water': 2, 'Electric': 1, 'Grass': 0.5, 'Ice': 1, 
+                  'Fighting': 1, 'Poison': 0.5, 'Ground': 2, 'Flying': 0.5, 'Psychic': 1, 'Bug': 0.5, 
+                  'Rock': 2, 'Ghost': 1, 'Dragon': 0.5, 'Dark': 1, 'Steel': 0.5, 'Fairy': 1},
+        'Ice': {'Normal': 1, 'Fire': 0.5, 'Water': 0.5, 'Electric': 1, 'Grass': 2, 'Ice': 0.5, 
+                'Fighting': 1, 'Poison': 1, 'Ground': 2, 'Flying': 2, 'Psychic': 1, 'Bug': 1, 
+                'Rock': 1, 'Ghost': 1, 'Dragon': 2, 'Dark': 1, 'Steel': 0.5, 'Fairy': 1},
+        'Fighting': {'Normal': 2, 'Fire': 1, 'Water': 1, 'Electric': 1, 'Grass': 1, 'Ice': 2, 
+                     'Fighting': 1, 'Poison': 0.5, 'Ground': 1, 'Flying': 0.5, 'Psychic': 0.5, 'Bug': 0.5, 
+                     'Rock': 2, 'Ghost': 0, 'Dragon': 1, 'Dark': 2, 'Steel': 2, 'Fairy': 0.5},
+        'Poison': {'Normal': 1, 'Fire': 1, 'Water': 1, 'Electric': 1, 'Grass': 2, 'Ice': 1, 
+                   'Fighting': 1, 'Poison': 0.5, 'Ground': 0.5, 'Flying': 1, 'Psychic': 2, 'Bug': 1, 
+                   'Rock': 0.5, 'Ghost': 0.5, 'Dragon': 1, 'Dark': 1, 'Steel': 0, 'Fairy': 2},
+        'Ground': {'Normal': 1, 'Fire': 2, 'Water': 1, 'Electric': 2, 'Grass': 0.5, 'Ice': 1, 
+                   'Fighting': 1, 'Poison': 2, 'Ground': 1, 'Flying': 0, 'Psychic': 1, 'Bug': 1, 
+                   'Rock': 2, 'Ghost': 1, 'Dragon': 1, 'Dark': 1, 'Steel': 2, 'Fairy': 1},
+        'Flying': {'Normal': 1, 'Fire': 1, 'Water': 1, 'Electric': 2, 'Grass': 2, 'Ice': 1, 
+                   'Fighting': 2, 'Poison': 1, 'Ground': 1, 'Flying': 1, 'Psychic': 1, 'Bug': 2, 
+                   'Rock': 0.5, 'Ghost': 1, 'Dragon': 1, 'Dark': 1, 'Steel': 0.5, 'Fairy': 1},
+        'Psychic': {'Normal': 1, 'Fire': 1, 'Water': 1, 'Electric': 1, 'Grass': 1, 'Ice': 1, 
+                    'Fighting': 2, 'Poison': 2, 'Ground': 1, 'Flying': 1, 'Psychic': 0.5, 'Bug': 1, 
+                    'Rock': 1, 'Ghost': 2, 'Dragon': 1, 'Dark': 0, 'Steel': 0.5, 'Fairy': 1},
+        'Bug': {'Normal': 1, 'Fire': 0.5, 'Water': 1, 'Electric': 1, 'Grass': 2, 'Ice': 1, 
+                'Fighting': 0.5, 'Poison': 0.5, 'Ground': 1, 'Flying': 0.5, 'Psychic': 2, 'Bug': 1, 
+                'Rock': 1, 'Ghost': 0.5, 'Dragon': 1, 'Dark': 2, 'Steel': 0.5, 'Fairy': 0.5},
+        'Rock': {'Normal': 1, 'Fire': 2, 'Water': 1, 'Electric': 1, 'Grass': 1, 'Ice': 2, 
+                 'Fighting': 0.5, 'Poison': 1, 'Ground': 0.5, 'Flying': 2, 'Psychic': 1, 'Bug': 2, 
+                 'Rock': 1, 'Ghost': 1, 'Dragon': 1, 'Dark': 1, 'Steel': 0.5, 'Fairy': 1},
+        'Ghost': {'Normal': 0, 'Fire': 1, 'Water': 1, 'Electric': 1, 'Grass': 1, 'Ice': 1, 
+                  'Fighting': 1, 'Poison': 1, 'Ground': 1, 'Flying': 1, 'Psychic': 2, 'Bug': 1, 
+                  'Rock': 1, 'Ghost': 2, 'Dragon': 1, 'Dark': 2, 'Steel': 1, 'Fairy': 1},
+        'Dragon': {'Normal': 1, 'Fire': 1, 'Water': 1, 'Electric': 1, 'Grass': 1, 'Ice': 1, 
+                   'Fighting': 1, 'Poison': 1, 'Ground': 1, 'Flying': 1, 'Psychic': 1, 'Bug': 1, 
+                   'Rock': 1, 'Ghost': 1, 'Dragon': 2, 'Dark': 1, 'Steel': 0.5, 'Fairy': 2},
+        'Dark': {'Normal': 1, 'Fire': 1, 'Water': 1, 'Electric': 1, 'Grass': 1, 'Ice': 1, 
+                 'Fighting': 0.5, 'Poison': 1, 'Ground': 1, 'Flying': 1, 'Psychic': 2, 'Bug': 1, 
+                 'Rock': 1, 'Ghost': 2, 'Dragon': 1, 'Dark': 0.5, 'Steel': 1, 'Fairy': 0.5},
+        'Steel': {'Normal': 1, 'Fire': 0.5, 'Water': 0.5, 'Electric': 0.5, 'Grass': 1, 'Ice': 2, 
+                  'Fighting': 1, 'Poison': 0, 'Ground': 1, 'Flying': 1, 'Psychic': 1, 'Bug': 1, 
+                  'Rock': 2, 'Ghost': 1, 'Dragon': 1, 'Dark': 1, 'Steel': 0.5, 'Fairy': 2},
+        'Fairy': {'Normal': 1, 'Fire': 0.5, 'Water': 1, 'Electric': 1, 'Grass': 1, 'Ice': 1, 
+                  'Fighting': 2, 'Poison': 0.5, 'Ground': 1, 'Flying': 1, 'Psychic': 1, 'Bug': 1, 
+                  'Rock': 1, 'Ghost': 1, 'Dragon': 2, 'Dark': 2, 'Steel': 0.5, 'Fairy': 1}
+    }
+    
+    all_types = list(TYPE_CHART.keys())
+    weaknesses = []
+    
+    for attacking_type in all_types:
+        total_multiplier = 1
+        
+        for defending_type in types_list:
+            if defending_type in TYPE_CHART and attacking_type in TYPE_CHART[defending_type]:
+                multiplier = TYPE_CHART[defending_type][attacking_type]
+                total_multiplier *= multiplier
+        
+        # Fraqueza = multiplicador > 1
+        if total_multiplier > 1:
+            weaknesses.append(attacking_type)
+    
+    return sorted(weaknesses)
+
 @pokemon_bp.route('/')
 def list_pokemon():
     """
@@ -234,4 +315,45 @@ def pokedex_detail(species_id):
         joinedload(Species.forms)
     ).get_or_404(species_id)
     
-    return render_template('pokedex/detail.html', species=species)
+    # Processar campos de tipos e fraquezas (separados por vírgula)
+    if species.types:
+        species.types_list = [t.strip() for t in species.types.split(',')]
+    else:
+        species.types_list = ['Normal']
+    
+    # Calcular fraquezas dinamicamente baseado nos tipos
+    species.weaknesses_list = calculate_weaknesses(species.types_list)
+    
+    # Processar estatísticas (JSON)
+    if species.stats:
+        try:
+            import json
+            species.stats_dict = json.loads(species.stats)
+        except:
+            species.stats_dict = {}
+    else:
+        species.stats_dict = {}
+    
+    # Processar evoluções (JSON)
+    if species.evolutions:
+        try:
+            import json
+            species.evolutions_list = json.loads(species.evolutions)
+        except:
+            species.evolutions_list = []
+    else:
+        species.evolutions_list = []
+    
+    # Encontrar o ID anterior e próximo
+    previous_id = Species.query.filter(Species.id < species_id).order_by(Species.id.desc()).first()
+    next_id = Species.query.filter(Species.id > species_id).order_by(Species.id.asc()).first()
+    
+    # Obter nomes do anterior e próximo
+    previous_name = previous_id.name if previous_id else None
+    next_name = next_id.name if next_id else None
+    
+    return render_template('pokedex/detail.html', species=species, 
+                          previous_id=previous_id.id if previous_id else None,
+                          previous_name=previous_name,
+                          next_id=next_id.id if next_id else None,
+                          next_name=next_name)

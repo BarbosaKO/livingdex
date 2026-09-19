@@ -15,6 +15,16 @@ class Species(db.Model):
     has_gender_differences = db.Column(db.Boolean, default=False)
     description = db.Column(db.Text, nullable=True)
     
+    # Novos campos para o design da Pokédex
+    height = db.Column(db.Float, nullable=True)  # Altura em metros
+    weight = db.Column(db.Float, nullable=True)  # Peso em kg
+    category = db.Column(db.String(64), nullable=True)  # Categoria (ex: "Seed")
+    abilities = db.Column(db.String(255), nullable=True)  # Habilidades (separadas por vírgula)
+    types = db.Column(db.String(255), nullable=True)  # Tipos (separados por vírgula)
+    weaknesses = db.Column(db.String(255), nullable=True)  # Fraquezas (separadas por vírgula)
+    stats = db.Column(db.String(255), nullable=True)  # Estatísticas em JSON
+    evolutions = db.Column(db.String(500), nullable=True)  # Evoluções em JSON
+    
     forms = db.relationship('FormVariant', backref='species', lazy='joined')
     allowed_attributes = db.relationship('SpeciesAllowedAttribute', backref='species')
 
